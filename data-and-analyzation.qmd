@@ -1,0 +1,10 @@
+## Final Project: Predicting Billionaires by Jayden Lewis 
+
+## Read in Data 
+```{r, message = FALSE}
+library(tidyverse)
+library(tidymodels)
+library(tidygraph)
+billionaires <- read.csv("billionaires.csv")
+```
+
