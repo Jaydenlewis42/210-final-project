@@ -7,4 +7,46 @@ library(tidymodels)
 library(tidygraph)
 billionaires <- read.csv("billionaires.csv")
 ```
+## Mutating Variables I'm working with
+```{r}
+project_variables <- billionaires |>
+  select(wealth.worth.in.billions, wealth.how.industry, wealth.how.inherited, company.founded)
+
+project_variables <- project_variables |>
+  mutate(industry = case_when(
+    wealth.how.industry %in% c("Technology-Computer", "Technology-Medical") ~ "Technology",
+    wealth.how.industry %in% c("banking", "Hedge funds", "Money Management", "Venture Capital", "Private equity/leveraged buyout") ~ "Finance",
+    wealth.how.industry %in% c("Consumer", "Retail, Restaurant") ~ "Consumer/Retail",
+    TRUE ~ "Other"  # This line catches all other categories not explicitly listed above
+  ))
+
+project_variables <- project_variables |>
+  mutate(inheritance = case_when(wealth.how.inherited %in% "not inherited" ~ "Not inherited",
+        TRUE ~ "Inherited"))
+project_variables <- project_variables |>
+  mutate(century_founded = case_when(
+    company.founded >= 1601 & company.founded <= 1700 ~ "17th Century",
+    company.founded >= 1701 & company.founded <= 1800 ~ "18th Century",
+    company.founded >= 1801 & company.founded <= 1900 ~ "19th Century",
+    company.founded >= 1901 & company.founded <= 2000 ~ "20th Century",
+    company.founded >= 2001 & company.founded <= 2100 ~ "21st Century",
+    TRUE ~ "Unknown"
+  ))
+
+
+```
+
+## Regresion Model
+```{r}
+M1 <- lm(wealth.worth.in.billions ~  industry + inheritance + century_founded, data = project_variables)
+
+tidy(M1)
+```
+## Plots 
+```{r}
+project_variables |>
+  ggplot(aes(x = industry, y = wealth.worth.in.billions, color = inheritance)) +
+  facet_wrap(~century_founded) + 
+  geom_point()
+```
 
