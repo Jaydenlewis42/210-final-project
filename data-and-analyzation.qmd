@@ -7,46 +7,115 @@ library(tidymodels)
 library(tidygraph)
 billionaires <- read.csv("billionaires.csv")
 ```
+
 ## Mutating Variables I'm working with
 ```{r}
 project_variables <- billionaires |>
-  select(wealth.worth.in.billions, wealth.how.industry, wealth.how.inherited, company.founded)
+  select(wealth.worth.in.billions, wealth.how.industry, wealth.how.inherited, demographics.age) |>
+  filter(demographics.age > 0)
 
 project_variables <- project_variables |>
   mutate(industry = case_when(
     wealth.how.industry %in% c("Technology-Computer", "Technology-Medical") ~ "Technology",
     wealth.how.industry %in% c("banking", "Hedge funds", "Money Management", "Venture Capital", "Private equity/leveraged buyout") ~ "Finance",
     wealth.how.industry %in% c("Consumer", "Retail, Restaurant") ~ "Consumer/Retail",
-    TRUE ~ "Other"  # This line catches all other categories not explicitly listed above
+    TRUE ~ "Other"  
   ))
 
 project_variables <- project_variables |>
   mutate(inheritance = case_when(wealth.how.inherited %in% "not inherited" ~ "Not inherited",
         TRUE ~ "Inherited"))
+
 project_variables <- project_variables |>
-  mutate(century_founded = case_when(
-    company.founded >= 1601 & company.founded <= 1700 ~ "17th Century",
-    company.founded >= 1701 & company.founded <= 1800 ~ "18th Century",
-    company.founded >= 1801 & company.founded <= 1900 ~ "19th Century",
-    company.founded >= 1901 & company.founded <= 2000 ~ "20th Century",
-    company.founded >= 2001 & company.founded <= 2100 ~ "21st Century",
-    TRUE ~ "Unknown"
-  ))
-
-
+  mutate(industry = if_else(industry == "Other", "Aother", industry))
 ```
 
 ## Regresion Model
 ```{r}
-M1 <- lm(wealth.worth.in.billions ~  industry + inheritance + century_founded, data = project_variables)
+M1 <- lm(wealth.worth.in.billions ~  industry + inheritance + demographics.age + industry*inheritance, data = project_variables)
 
 tidy(M1)
+```
+## Summary Statistics 
+```{r}
+project_variables |>
+  summarize(total_mean = mean(wealth.worth.in.billions))
+
+project_variables |>
+  select(wealth.worth.in.billions, industry) |>
+  group_by(industry) |>
+  summarize(mean = mean(wealth.worth.in.billions))
+
+project_variables |>
+  select(wealth.worth.in.billions, inheritance) |>
+  group_by(inheritance) |>
+  summarize(mean = mean(wealth.worth.in.billions))
+
+project_variables |>
+  select(wealth.worth.in.billions, industry) |>
+  group_by(industry) |>
+  summarize(count = n())
+
+project_variables |>
+  select(wealth.worth.in.billions, inheritance) |>
+  group_by(inheritance) |>
+  summarize(count = n())
+
+```
+
+
+
+## Residual + Assumption Plots 
+
+```{r}
+M1_aug <- augment(M1)
+
+ggplot(M1_aug, aes(x = .fitted, y = .resid)) + 
+  geom_point() + 
+  geom_hline(yintercept = 0, color = "darkred") + 
+  labs(x = "Fitted (predicted) value", y = "Residual") + 
+  theme_bw()
+
+
+ggplot(M1_aug, aes(x = .resid)) + 
+  geom_histogram(aes(y = ..density..), 
+                     fill = "deepskyblue", color = "darkblue") + 
+  stat_function(fun = dnorm, 
+                args = list(mean = mean(M1_aug$.resid),
+                            sd = sd(M1_aug$.resid)),
+                color = "darkred", lwd = 2) +
+  labs(x = "Residual", y = "Density") + 
+  theme_bw()
+
+ggplot(M1_aug, aes(sample = .resid)) +
+  stat_qq() + 
+  stat_qq_line() + 
+  theme_bw() + 
+  labs(x = "Theoretical quantiles", 
+       y = "Sample quantiles")
 ```
 ## Plots 
 ```{r}
 project_variables |>
-  ggplot(aes(x = industry, y = wealth.worth.in.billions, color = inheritance)) +
-  facet_wrap(~century_founded) + 
-  geom_point()
+  ggplot(aes(x = wealth.worth.in.billions, fill = inheritance)) +
+  geom_histogram() +
+  facet_wrap(~industry)
+
+project_variables |>
+  mutate(demographics.age = case_when(
+    demographics.age >= 12 & demographics.age <= 30 ~ "12-30",
+    demographics.age >= 31 & demographics.age <= 50 ~ "31-50",
+    demographics.age >= 51 & demographics.age <= 70~ "51-70",
+    demographics.age >= 71 & demographics.age <= 100 ~ "71-98",
+    TRUE ~ "Unknown"
+)) |>
+  ggplot(aes(x = demographics.age, 
+             y = wealth.worth.in.billions)) +
+  geom_boxplot()
+```
+```{r}
+project_variables |>
+  select(demographics.age) |>
+  arrange(desc(demographics.age))
 ```
 
