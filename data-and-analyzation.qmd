@@ -7,6 +7,16 @@ library(tidymodels)
 library(tidygraph)
 billionaires <- read.csv("billionaires.csv")
 ```
+## Looking for problems within variables 
+```{r}
+billionaires |>
+  select(wealth.how.industry, name) |>
+  filter(wealth.how.industry == "0")
+
+billionaires |>
+  select(demographics.age, name) |>
+  filter(demographics.age == 0)
+```
 
 ## Mutating Variables I'm working with
 ```{r}
