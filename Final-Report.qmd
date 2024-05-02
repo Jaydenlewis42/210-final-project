@@ -70,7 +70,7 @@ For each sub question, we have established a null and alternative hypothesis:
 
     Alternative: the true slope for age is not zero - there is a significant linear relationship between age and net worth
 
-Here are the following relevant plots and summary statistics to asses the relationships between net worth and inheritance, industry, and age.
+Here are the following relevant plots asses the relationships between net worth and inheritance, industry, and age.
 
 ***Figure 1.1***
 
@@ -81,7 +81,7 @@ project_variables |>
   labs(title = "Median networth appears approximately the same across indsutries",
        subtitle = "Higher networths are assocaited with non-inherited wealth",
        x = "Industry",
-       y = "Net worth (billions of dollars)",
+       y = "Net worth (billions of USD)",
        color = "Inheritance Status")
 ```
 
@@ -101,35 +101,7 @@ project_variables |>
   geom_boxplot() + 
   labs(title = "As age increases, net worth appears to slightly increase",
        x = "Billionaires' ages",
-       y = "Net worth (billions of dollars)")
-```
-
-***Figure 1.3***
-
-```{r, echo=FALSE}
-project_variables |>
-  summarize(total_median = median(wealth.worth.in.billions),
-            total_mean = mean(wealth.worth.in.billions))
-```
-
-***Figure 1.4***
-
-```{r, echo=FALSE}
-project_variables |>
-  select(wealth.worth.in.billions, inheritance) |>
-  group_by(inheritance) |>
-  summarize(meadian = median(wealth.worth.in.billions),
-            mean = mean(wealth.worth.in.billions))
-```
-
-***Figure 1.5***
-
-```{r, echo=FALSE}
-project_variables |>
-  select(wealth.worth.in.billions, industry) |>
-  group_by(industry) |>
-  summarize(median = median(wealth.worth.in.billions),
-            mean = mean(wealth.worth.in.billions))
+       y = "Net worth (billions of USD)")
 ```
 
 ## Methodology
@@ -184,7 +156,36 @@ According to the above Q-Q plot, up until the last third of the plot, normality 
 
 ## Results
 
-```{r}
-glance(M1)
+***Figure 3.1***
+
+```{r, echo=FALSE}
+tidy(M1)
 ```
 
+According to the results above, we can make a few general conclusions to help us answer our research question:
+
+The model predicts that for every one unit increase in age, a billionaire's net worth is predicted to increase by 0.0404 billions of USD. The older a billionaire is, the higher their predicted net worth will be.
+
+For billionaires who did inherit their wealth, which is the baseline, the model predicts that out of those in Tech, Finance, and Consumer/Retail compared to other industries, billionaires in Consumer/Retail are expected to have the highest net worth of 2.21 billions of USD (1.159 + 1.051), those in Tech to have the second highest net worth of 0.988 billions of USD (1.159 - 0.171), and those in Finance to have the lowest net worth of 0.432 billions of USD (1.159 -0.727).
+
+For billionaires who did not inherit their wealth, the model predicts those in Tech to have the highest net worth of 2.234 billions of USD (1.159 - 0.171 - 0.378 + 1.624), those in Consumer/Retail to second highest net worth of 1.064 billions of USD (1.159 + 1.051 - 0.378 - 0.768), and those in Finance to have the lowest net worth of 0.701 billions of USD (1.159 - 0.727 - 0.378 + 0.647).
+
+Therefore, considering those in the Tech or Finance industry, compared to industries other than Consumer/Retail, the model predicts the billionaires who did not inherit their wealth to have a higher net worth than those who did inherit it. Considering those in the Consumer/Retail Industry, compared to industries other than Tech or Finance, the model predicts billionaires who did not inherit their wealth to have a lower net worth than those who did inherit it.
+
+**Hypothesis Test:**
+
+For assessing our proposed hypotheses, we will use an alpha level of 0.05
+
+Because the p value associated with the Consumer/Retail industry is 0.0157 and less than our alpha level, we have sufficient evidence to reject the null hypothesis, and we conclude that there is a statistically significant linear relationship between between being in the Consumer/Retail industry and net worth. However, because the p values associated with Technology(0.833) and Finance(0.251) are greater than our alpha level, we have insufficient evidence to reject the null hypothesis, and we conclude that there is no statistically significant linear relationship between being in Tech or Finance and net worth. The p value for inheritance (0.284) is also greater than our alpha level, so we have insufficient evidence to reject the null hypothesis, and we conclude that there is no statistically significant relationship between inheritance and net worth. Finally, because the p value for age (4.979e-6) is less than our alpha level, we have sufficent evidence to reject the null hypothesis, and we conclude that there is a statistically significant relationship between age and net worth.
+
+Because of our p-value results, the only predictor we can use to make statistically correct and significant conclusions is the age variable. Since we decided to create an interaction term between industry and inheritance, we cannot use the Consumer/Retail industry predictor to draw conclusions. Even though this p-value is less than our alpha level, we interpret this coefficient based on the fact that the billionaire did inherit their wealth. Since the p-value associated with inheritance is greater than our alpha level, we have to assume that there is no linear relationship between inheritance and net worth, and therefore can not draw statistically correct conclusions about industry.
+
+***Figure 3.2***
+
+```{r, echo=FALSE}
+model_summary <- summary(M1)
+R_squared <- model_summary$r.squared
+print(R_squared)
+```
+
+To determine the predictive capability of our model, we decided to use the R squared value, which is 0.0189. Because this value is so low, we have determined that our liner model was not appropriate to fit, and that perhaps the relationship between net worth and inheritance and industry is not in fact linear. We have also concluded that perhaps there are significant outliers, high leverage points, or influential points that are affecting the model fit, of which we can see in figure 1.1 and figure 2.1. When also considering the high p-values our model produced, this R squared value makes continues to make sense.
